@@ -27,8 +27,7 @@ Appify(function (app) {
 
 	// -- This is the default behavior if a route isn't provided
 	// app.route('login', function () {
-	// 	app.setRenderer('login');
-	// 	app.reRender();
+	// 	app.render('login');
 	// });
 
 	// application level template
