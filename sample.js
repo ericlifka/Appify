@@ -45,9 +45,7 @@ Appify(function (app) {
 		return $div(
 			$div("Welcome " + app.data.user.displayName).class("banner"),
 			$div(
-				_.map(goals, function (goal) {
-					return $goal(goal);		// haven't figure out best way to make render helpers like this yet
-				})
+				_.map(goals, function (goal) { return $goal(goal); })
 			).class("goals")
 		).class("home");
 	});
@@ -65,6 +63,19 @@ Appify(function (app) {
 			});
 		).class("login");
 	});
+
+	// view helpers
+	function $authBar(user) {
+		return $div(user.name).class('auth-bar');
+	}
+
+	function $footer() {
+		return $div("Copyright Palooza 2013").class('footer');
+	}
+
+	function $goal(goal) {
+		return $div(goal.name).class('goal');
+	}
 
 	// helpers pull state changing logic out of the views for cleaner boundaries
 	// returning promises is a good way to catch errors in the view layer
