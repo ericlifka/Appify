@@ -1,4 +1,4 @@
-Appify = require 'Appify'
+Appify = window.Appify
 {$div, $a} = Appify.templates
 
 Appify (app) ->
