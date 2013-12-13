@@ -2,21 +2,26 @@ Appify(function (app) {
 	var $div = Appify.templates.$div;
 	var $a = Appify.templates.$a;
 
-	app.route('index', function (details, render) {
-		render('index');
+	app.route(function (next, details) {
+		console.log('Middleware!');
+		next(details);
 	});
 
-	app.route('other', function (details, render) {
-		render('other');
+	app.route('index', function (render, details) {
+		render('index', details);
 	});
 
-	app.renderer(function ($outlet) {
+	app.route('other', function (render, details) {
+		render('other', details);
+	});
+
+	app.renderer(function ($outlet, details) {
 		$div(
 			$outlet()
 		).class('application');
 	});
 
-	app.renderer('index', function () {
+	app.renderer('index', function (details) {
 		return $div(
 			$div('Home Page'),
 			$a('Go to Other Page').on('click', function () {
@@ -25,7 +30,7 @@ Appify(function (app) {
 		).class('home');
 	});
 
-	app.renderer('other', function () {
+	app.renderer('other', function (details) {
 		return $div(
 			$div('Other Page'),
 			$a('Go to Home Page').on('click', function () {
