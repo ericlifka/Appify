@@ -15,7 +15,7 @@
 			var routeMiddleware = [];
 
 			var renderers = {};
-			var rendererMiddleware = [];
+			var renderMiddleware = [];
 
 			var route = function (name, callback) {
 				if (isMiddlewareCall(arguments)) {
@@ -29,7 +29,7 @@
 
 			var render = function (name, callback) {
 				if (isMiddlewareCall(arguments)) {
-					rendererMiddleware.push(arguments[0]);
+					renderMiddleware.push(arguments[0]);
 				} else if (arguments.length === 2) {
 					renderers[name] = callback;
 				} else {
@@ -45,7 +45,7 @@
 
 				var current = 0;
 				var $outlet = function (updatedDetails) {
-					var middleware = rendererMiddleware[current];
+					var middleware = renderMiddleware[current];
 					current += 1;
 
 					if (middleware) {
