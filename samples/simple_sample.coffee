@@ -2,25 +2,28 @@ Appify = window.Appify
 {$div, $a} = Appify.templates
 
 Appify (app) ->
-	app.route 'index', (details, render) ->
-		render 'index'
+	app.route (next, details) ->
+		next details
 
-	app.route 'other', (details, render) ->
-		render 'other'
+	app.route 'index', (render, details) ->
+		render 'index', details
 
-	app.renderer ($outlet) ->
+	app.route 'other', (render, details) ->
+		render 'other', details
+
+	app.renderer ($outlet, details) ->
 		$div(
-			$outlet()
+			$outlet details
 		).class 'application'
 
-	app.renderer 'index', ->
+	app.renderer 'index', (details) ->
 		$div(
 			$div 'Home Page'
 			$a('Go to Other Page').on 'click', ->
 				app.transitionTo 'other'
 		).class 'home'
 
-	app.renderer 'other', ->
+	app.renderer 'other', (details) ->
 		$div(
 			$div 'Other Page'
 			$a('Go to Home Page').on 'click', ->
