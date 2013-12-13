@@ -23,24 +23,24 @@
 				} else if (arguments.length === 2) {
 					routes[name] = callback;
 				} else {
-					throw 'Unrecognized call signature for app.route';
+					throw 'Unrecognized call signature for route';
 				}
 			};
 
-			var renderer = function (name, callback) {
+			var render = function (name, callback) {
 				if (isMiddlewareCall(arguments)) {
 					rendererMiddleware.push(arguments[0]);
 				} else if (arguments.length === 2) {
 					renderers[name] = callback;
 				} else {
-					throw 'Unrecognized call signature for app.renderer';
+					throw 'Unrecognized call signature for render';
 				}
 			};
 
-			var render = function (rendererName, details) {
-				var renderer = renderers[rendererName];
-				if (!renderer) {
-					throw "No handler provided for renderer: " + rendererName;
+			var renderer = function (name, details) {
+				var renderHandler = renderers[name];
+				if (!renderHandler) {
+					throw "No handler provided for renderer: " + name;
 				}
 
 				var current = 0;
@@ -51,7 +51,7 @@
 					if (middleware) {
 						return middleware($outlet, updatedDetails);
 					} else {
-						return renderer(updatedDetails);
+						return renderHandler(updatedDetails);
 					}
 				};
 
@@ -59,7 +59,7 @@
 				console.log('rendering complete', viewTree);
 			};
 
-			var transitionTo = function (routeName, details) {
+			var transition = function (routeName, details) {
 				var routeHandler = routes[routeName];
 				if (!routeHandler) {
 					throw "No handler provided for route: " + routeName;
@@ -73,22 +73,16 @@
 					if (middleware) {
 						middleware(next, updatedDetails);
 					} else {
-						routeHandler(render, updatedDetails);
+						routeHandler(renderer, updatedDetails);
 					}
 				};
 
 				next(details);
 			};
 
-			var app = {
-				route: route,
-				renderer: renderer,
-				transitionTo: transitionTo
-			};
+			appCallback(route, render, transition);
 
-			appCallback(app);
-
-			app.transitionTo('index');
+			transition('index');
 		};
 
 		if (navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry)/)) {

@@ -1,39 +1,39 @@
-Appify(function (app) {
+Appify(function (route, render, transition) {
 	var $div = Appify.templates.$div;
 	var $a = Appify.templates.$a;
 
-	app.route(function (next, details) {
+	route(function (next, details) {
 		next(details);
 	});
 
-	app.route('index', function (render, details) {
-		render('index', details);
+	route('index', function (renderer, details) {
+		renderer('index', details);
 	});
 
-	app.route('other', function (render, details) {
-		render('other', details);
+	route('other', function (renderer, details) {
+		renderer('other', details);
 	});
 
-	app.renderer(function ($outlet, details) {
+	render(function ($outlet, details) {
 		return $div(
 			$outlet(details)
 		).class('application');
 	});
 
-	app.renderer('index', function (details) {
+	render('index', function (details) {
 		return $div(
 			$div('Home Page'),
 			$a('Go to Other Page').on('click', function () {
-				app.transitionTo('other');
+				transition('other');
 			})
 		).class('home');
 	});
 
-	app.renderer('other', function (details) {
+	render('other', function (details) {
 		return $div(
 			$div('Other Page'),
 			$a('Go to Home Page').on('click', function () {
-				app.transitionTo('index');
+				transition('index');
 			})
 		).class('other');
 	});
