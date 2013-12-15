@@ -23,7 +23,7 @@ Appify(function (route, render, transition) {
 	render('index', function (details) {
 		return $div(
 			$div('Home Page'),
-			$a('Go to Other Page').on('click', function () {
+			$a({href: "#"}, 'Go to Other Page').on('click', function () {
 				transition('other');
 			})
 		).class('home');
@@ -32,7 +32,7 @@ Appify(function (route, render, transition) {
 	render('other', function (details) {
 		return $div(
 			$div('Other Page'),
-			$a('Go to Home Page').on('click', function () {
+			$a({href: "#"}, 'Go to Home Page').on('click', function () {
 				transition('index');
 			})
 		).class('other');

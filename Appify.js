@@ -9,6 +9,10 @@
 		return args.length === 1 && 'function' === typeof args[0];
 	};
 
+	var escapeQuotes = function (string) {
+		return string.replace(/"/gi, '\\"');
+	};
+
 	var Appify = function (appCallback) { 
 		var appStart = function () {
 			var routes = {};
@@ -56,8 +60,7 @@
 				};
 
 				var viewTree = $outlet(details);
-				debugger;
-				console.log('rendering complete', viewTree);
+				document.body.innerHTML = viewTree.generateHtml();
 			};
 
 			var transition = function (routeName, details) {
@@ -93,54 +96,102 @@
 		}
 	};
 
-	// Templating
+
 	var HtmlElement = function () {
 		if (window === this) {
 			throw "HtmlElement constructor called without 'new' keyword";
 		}
+		this.init();
+	};
+	HtmlElement.prototype = {
+		init: function () {
+			this.children = [];
+			this.attributes = {};
+			this.events = {};
+		},
+		on: function (event, handler) {
+			if (!this.events[event]) {
+				this.events[event] = [];
+			}
+			this.events[event].push(handler);
+			return this;
+		},
+		class: function (/* classNames... */) {
+			for (var i = 0, length = arguments.length; i < length; i++) {
+				this.attr('class', arguments[i]);
+			}
+			return this;
+		},
+		attr: function (attr, value) {
+			if (!this.attributes[attr]) {
+				this.attributes[attr] = value;
+			}
+			else if ($.isArray(this.attributes[attr])) {
+				this.attributes[attr].push(value);
+			} else {
+				var original = this.attributes[attr];
+				this.attributes[attr] = [original, value];
+			}
+			return this;
+		},
+		tag: function (tag) {
+			this.tag = tag;
+			return this;
+		},
+		child: function (child) {
+			this.children.push(child);
+			return this;
+		},
+		children: function (children) {
+			for (var i = 0, length = children.length; i < length; i++) {
+				this.children.push(children[i]);
+			}
+			return this;
+		},
+		toString: function () {
+			return "[HtmlElement <" + this.tag + ">]";
+		},
+		generateHtml: function () {
+			var openTag = this.generateOpenTag();
+			var childrenHtml = this.getChildrenHtml();
+			var closeTag = this.generateCloseTag();
 
-		this.children = [];
-		this.attributes = {};
-		this.events = {};
-	};
-	HtmlElement.prototype.on = function (event, handler) {
-		if (!this.events[event]) {
-			this.events[event] = [];
+			return openTag + childrenHtml + closeTag;
+		},
+		generateOpenTag: function () {
+			var tag = "<" + this.tag;
+			for (var attr in this.attributes) {
+				if (this.attributes.hasOwnProperty(attr)) {
+					var value = this.attributes[attr];
+					if ($.isArray(value)) {
+						value = value.join(' ');
+					}
+					tag += ' ' + attr + '="' + escapeQuotes(value) + '"';
+				}
+			}
+			tag += ">";
+			return tag;
+		},
+		generateCloseTag: function () {
+			return "</" + this.tag + ">";
+		},
+		getChildrenHtml: function () {
+			var childrenHtml = "";
+			for (var i = 0, length = this.children.length; i < length; i++) {
+				var child = this.children[i];
+				if ('string' === typeof child) {
+					childrenHtml += child;
+				} else if ('function' === typeof child.generateHtml) {
+					childrenHtml += child.generateHtml();
+				} else {
+					throw {
+						toString: function () { return "Unrecognized child element type"; },
+						child: child
+					};
+				}
+			}
+			return childrenHtml;
 		}
-		this.events[event].push(handler);
-		return this;
-	};
-	HtmlElement.prototype.class = function (/* classNames... */) {
-		for (var i = 0, length = arguments.length; i < length; i++) {
-			this.attr('class', arguments[i]);
-		}
-		return this;
-	};
-	HtmlElement.prototype.attr = function (attr, value) {
-		if (!this.attributes[attr]) {
-			this.attributes[attr] = value;
-		}
-		else if ($.isArray(this.attributes[attr])) {
-			this.attributes[attr].push(value);
-		} else {
-			var original = this.attributes[attr];
-			this.attributes[attr] = [original, value];
-		}
-		return this;
-	};
-	HtmlElement.prototype.tag = function (tag) {
-		this.tag = tag;
-		return this;
-	};
-	HtmlElement.prototype.child = function (child) {
-		this.children.push(child);
-		return this;
-	};
-	HtmlElement.prototype.children = function (children) {
-		for (var i = 0, length = children.length; i < length; i++) {
-			this.children.push(children[i]);
-		}
-		return this;
 	};
 
 	var isHtmlElement = function (elem) {
