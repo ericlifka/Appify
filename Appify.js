@@ -65,8 +65,8 @@
 				};
 
 				var viewTree = $outlet(details);
-				document.body.innerHTML = viewTree.generateHtml();
-				viewTree.bindEvents();
+				document.body.innerHTML = generateHtml(viewTree);
+				bindEvents(viewTree);
 			};
 
 			var transition = function (routeName, details) {
@@ -107,14 +107,12 @@
 		if (window === this) {
 			throw "HtmlElement constructor called without 'new' keyword";
 		}
-		this.init();
+
+		this.children = [];
+		this.attributes = {};
+		this.events = {};
 	};
 	HtmlElement.prototype = {
-		init: function () {
-			this.children = [];
-			this.attributes = {};
-			this.events = {};
-		},
 		on: function (event, handler) {
 			if (!this.events[event]) {
 				this.events[event] = [];
@@ -157,81 +155,33 @@
 		toString: function () {
 			return "[HtmlElement <" + this.tag + ">]";
 		},
-		generateHtml: function () {
-			this.generateUniqueId();
-
-			var openTag = this.generateOpenTag();
-			var childrenHtml = this.getChildrenHtml();
-			var closeTag = this.generateCloseTag();
-
-			return openTag + childrenHtml + closeTag;
-		},
-		generateOpenTag: function () {
-			var tag = "<" + this.tag;
-			for (var attr in this.attributes) {
-				if (this.attributes.hasOwnProperty(attr)) {
-					var value = this.attributes[attr];
-					if ($.isArray(value)) {
-						value = value.join(' ');
-					}
-					tag += ' ' + attr + '="' + escapeQuotes(value) + '"';
-				}
-			}
-			tag += ">";
-			return tag;
-		},
-		generateCloseTag: function () {
-			return "</" + this.tag + ">";
-		},
-		getChildrenHtml: function () {
-			var childrenHtml = "";
-			for (var i = 0, length = this.children.length; i < length; i++) {
-				var child = this.children[i];
-				if ('string' === typeof child) {
-					childrenHtml += child;
-				} else if ('function' === typeof child.generateHtml) {
-					childrenHtml += child.generateHtml();
-				} else {
-					throw {
-						toString: function () { return "Unrecognized child element type"; },
-						child: child
-					};
-				}
-			}
-			return childrenHtml;
-		},
-		generateUniqueId: function () {
-			if (!this.attributes.id && this.hasEvents()) {
-				this.attr('id', nextUniqueId());
-			}
-		},
-		bindEvents: function () {
-			var i, length;
-			var id = this.attributes.id;
-			for (var event in this.events) {
-				if (this.events.hasOwnProperty(event)) {
-					var handlers = this.events[event];
-					for (i = 0, length = handlers.length; i < length; i++) {
-						var handler = handlers[i];
-						$("#" + id).on(event, handler);
-					}
-				}
-			}
-
-			for (i = 0, length = this.children.length; i < length; i++) {
-				var element = this.children[i];
-				if (isHtmlElement(element)) {
-					element.bindEvents();
-				}
-			}
-		},
-		hasEvents: function () {
-			return Object.keys(this.events).length > 0;
-		}
 	};
 
+
+	// Private HtmlElement helpers
 	var isHtmlElement = function (elem) {
 		return elem instanceof HtmlElement;
+	};
+
+	var hasEvents = function (elem) {
+		return Object.keys(elem.events).length > 0;
+	};
+
+	var updateElementBeforeRender = function (elem) {
+		generateUniqueId(elem);
+		addDefaultHref(elem);
+	};
+
+	var addDefaultHref = function (elem) {
+		if ('a' === elem.tag && !elem.attributes.href) {
+			elem.attr('href', '#');
+		} 
+	};
+
+	var generateUniqueId = function (elem) {
+		if (!elem.attributes.id && hasEvents(elem)) {
+			elem.attr('id', nextUniqueId());
+		}
 	};
 
 	var createElem = function (tag, args) {
@@ -252,6 +202,75 @@
 		}
 		return elem;
 	};
+
+	var generateHtml = function (elem) {
+		updateElementBeforeRender(elem);
+
+		var openTag = generateOpenTag(elem);
+		var childrenHtml = getChildrenHtml(elem);
+		var closeTag = generateCloseTag(elem);
+
+		return openTag + childrenHtml + closeTag;
+	};
+
+	var generateOpenTag = function (elem) {
+		var tag = "<" + elem.tag;
+		for (var attr in elem.attributes) {
+			if (elem.attributes.hasOwnProperty(attr)) {
+				var value = elem.attributes[attr];
+				if ($.isArray(value)) {
+					value = value.join(' ');
+				}
+				tag += ' ' + attr + '="' + escapeQuotes(value) + '"';
+			}
+		}
+		tag += ">";
+		return tag;
+	};
+
+	var generateCloseTag = function (elem) {
+		return "</" + elem.tag + ">";
+	};
+
+	var getChildrenHtml = function (elem) {
+		var childrenHtml = "";
+		for (var i = 0, length = elem.children.length; i < length; i++) {
+			var child = elem.children[i];
+			if ('string' === typeof child) {
+				childrenHtml += child;
+			} else if (isHtmlElement(child)) {
+				childrenHtml += generateHtml(child);
+			} else {
+				throw {
+					toString: function () { return "Unrecognized child element type"; },
+					child: child
+				};
+			}
+		}
+		return childrenHtml;
+	};
+
+	var bindEvents = function (elem) {
+		var i, length;
+		var id = elem.attributes.id;
+		for (var event in elem.events) {
+			if (elem.events.hasOwnProperty(event)) {
+				var handlers = elem.events[event];
+				for (i = 0, length = handlers.length; i < length; i++) {
+					var handler = handlers[i];
+					$("#" + id).on(event, handler);
+				}
+			}
+		}
+
+		for (i = 0, length = elem.children.length; i < length; i++) {
+			var child = elem.children[i];
+			if (isHtmlElement(child)) {
+				bindEvents(child);
+			}
+		}
+	};
+
 
 	var generateTagFunction = function (tag) {
 		return function () {
