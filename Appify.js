@@ -180,7 +180,11 @@
 		}
 	};
 
-	var tags = ['div', 'a'];
+	var tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr', 'b', 'code', 'em', 'i',
+				'kbd', 'pre', 'small', 'strong', 'abbr', 'address', 'bdo', 'blockquote',
+				'cite', 'del', 'ins', 'sub', 'sup', 'a', 'img', 'div', 'span', 'ul', 'li',
+				'ol', 'dl', 'dt', 'dd', 'table', 'tr', 'th', 'td', 'iframe', 'form', 'input',
+				'select', 'option', 'textarea'];
 	var length = tags.length;
 	for (var i = 0; i < length; i++) {
 		(function (tag) {
