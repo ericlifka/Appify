@@ -13,6 +13,11 @@
 		return string.replace(/"/gi, '\\"');
 	};
 
+	var idCounter = 0;
+	var nextUniqueId = function () {
+		return "appify" + idCounter++;
+	};
+
 	var Appify = function (appCallback) { 
 		var appStart = function () {
 			var routes = {};
@@ -61,6 +66,7 @@
 
 				var viewTree = $outlet(details);
 				document.body.innerHTML = viewTree.generateHtml();
+				viewTree.bindEvents();
 			};
 
 			var transition = function (routeName, details) {
@@ -152,6 +158,8 @@
 			return "[HtmlElement <" + this.tag + ">]";
 		},
 		generateHtml: function () {
+			this.generateUniqueId();
+
 			var openTag = this.generateOpenTag();
 			var childrenHtml = this.getChildrenHtml();
 			var closeTag = this.generateCloseTag();
@@ -191,6 +199,34 @@
 				}
 			}
 			return childrenHtml;
+		},
+		generateUniqueId: function () {
+			if (!this.attributes.id && this.hasEvents()) {
+				this.attr('id', nextUniqueId());
+			}
+		},
+		bindEvents: function () {
+			var i, length;
+			var id = this.attributes.id;
+			for (var event in this.events) {
+				if (this.events.hasOwnProperty(event)) {
+					var handlers = this.events[event];
+					for (i = 0, length = handlers.length; i < length; i++) {
+						var handler = handlers[i];
+						$("#" + id).on(event, handler);
+					}
+				}
+			}
+
+			for (i = 0, length = this.children.length; i < length; i++) {
+				var element = this.children[i];
+				if (isHtmlElement(element)) {
+					element.bindEvents();
+				}
+			}
+		},
+		hasEvents: function () {
+			return Object.keys(this.events).length > 0;
 		}
 	};
 
